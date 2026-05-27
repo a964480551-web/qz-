@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3003";
 const DESIGNER_STORAGE_KEY = "model_platform_designer_account";
 const DESIGNER_NAME_STORAGE_KEY = "model_platform_designer_name";
 const ADMIN_TOKEN_KEY = "model_platform_admin_token";
@@ -430,6 +430,27 @@ function DesignerView() {
     return newWin;
   }
 
+  async function copyTextToClipboard(text) {
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = text;
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.left = "-9999px";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+      setMessage("素材库编码已复制");
+    } catch (_error) {
+      setMessage("复制失败，请手动选中素材库编码复制");
+    }
+  }
+
   async function sendComment(materialId) {
     const content = (commentDrafts[materialId] || "").trim();
     if (!content) return;
@@ -703,7 +724,7 @@ function DesignerView() {
                           <button
                             type="button"
                             className="inline-btn"
-                            onClick={() => navigator.clipboard.writeText(item.materialCode)}
+                            onClick={() => copyTextToClipboard(item.materialCode)}
                           >
                             复制
                           </button>
@@ -824,6 +845,7 @@ function AdminView() {
   const [unreadMap, setUnreadMap] = useState({});
   const [selectedAccounts, setSelectedAccounts] = useState({});
   const [selectedStaffs, setSelectedStaffs] = useState({});
+  const [quotaAddMap, setQuotaAddMap] = useState({});
   const [rejectDialog, setRejectDialog] = useState({ open: false, id: 0, reason: "", saving: false });
   const [adminTab, setAdminTab] = useState("materials");
 
@@ -1047,6 +1069,26 @@ function AdminView() {
     }
   }
 
+  async function addAccountQuota(account) {
+    const amount = Number(quotaAddMap[account] || 1);
+    if (!Number.isFinite(amount) || amount < 1) {
+      setMessage("请输入大于 0 的额度数值");
+      return;
+    }
+    try {
+      await api(`/api/accounts/${encodeURIComponent(account)}/quota/add`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount })
+      });
+      setMessage(`已为 ${account} 增加 ${amount} 次额度`);
+      setQuotaAddMap((prev) => ({ ...prev, [account]: "" }));
+      await loadAll();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
   async function removeAccountsBatch() {
     const list = Object.keys(selectedAccounts).filter((k) => selectedAccounts[k]);
     if (list.length === 0) {
@@ -1059,6 +1101,17 @@ function AdminView() {
         list.map((account) => api(`/api/accounts/${encodeURIComponent(account)}`, { method: "DELETE" }))
       );
       setSelectedAccounts({});
+      await loadAll();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function resetAllAccountQuota() {
+    if (!window.confirm("确认重置所有设计师额度吗？所有人的已用次数会变为 0。")) return;
+    try {
+      const data = await api("/api/accounts/quota/reset-all", { method: "PUT" });
+      setMessage(`已重置所有设计师额度，共 ${data.changed || 0} 个账号`);
       await loadAll();
     } catch (error) {
       setMessage(error.message);
@@ -1437,6 +1490,7 @@ function AdminView() {
             <div className="row">
               <button type="button" onClick={toggleSelectAllAccounts}>全选</button>
               <button type="button" onClick={removeAccountsBatch}>批量删除</button>
+              <button type="button" onClick={resetAllAccountQuota}>重置所有人额度</button>
             </div>
             <table>
               <thead>
@@ -1464,6 +1518,18 @@ function AdminView() {
                     <td>{item.owner_name || "-"}</td>
                     <td>{item.used_count}</td>
                     <td>
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.used_count || 1}
+                        value={quotaAddMap[item.account] || ""}
+                        onChange={(e) =>
+                          setQuotaAddMap((prev) => ({ ...prev, [item.account]: e.target.value }))
+                        }
+                        placeholder="次数"
+                        className="quota-add-input"
+                      />
+                      <button type="button" onClick={() => addAccountQuota(item.account)}>增加额度</button>
                       <button type="button" onClick={() => removeAccount(item.account)}>删除</button>
                     </td>
                   </tr>

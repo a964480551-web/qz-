@@ -493,6 +493,11 @@ th {
   margin-bottom: 10px;
 }
 
+.quota-add-input {
+  width: 88px;
+  margin-right: 6px;
+}
+
 .submit-actions {
   display: flex;
   align-items: center;

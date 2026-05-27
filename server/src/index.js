@@ -570,6 +570,47 @@ app.post("/api/accounts/import-csv", requireAdmin, writeLimiter, csvUpload.singl
   }
 });
 
+app.put("/api/accounts/quota/reset-all", requireAdmin, writeLimiter, async (_req, res) => {
+  try {
+    const ts = now();
+    const result = await run("UPDATE accounts SET used_count = 0, updated_at = ?", [ts]);
+    res.json({ success: true, changed: result.changes || 0 });
+  } catch (_error) {
+    res.status(500).json({ message: "重置所有人额度失败" });
+  }
+});
+
+app.put("/api/accounts/:account/quota/add", requireAdmin, writeLimiter, async (req, res) => {
+  try {
+    const account = normalizeText(req.params.account);
+    const amount = Math.max(1, Number(req.body?.amount || 1));
+    if (!account) {
+      res.status(400).json({ message: "账号无效" });
+      return;
+    }
+    const row = await get("SELECT account, used_count FROM accounts WHERE account = ?", [account]);
+    if (!row) {
+      res.status(404).json({ message: "设计师账号不存在" });
+      return;
+    }
+    const ts = now();
+    const nextUsedCount = Math.max(0, row.used_count - amount);
+    await run("UPDATE accounts SET used_count = ?, updated_at = ? WHERE account = ?", [
+      nextUsedCount,
+      ts,
+      account
+    ]);
+    res.json({
+      success: true,
+      account,
+      usedCount: nextUsedCount,
+      remaining: DESIGNER_TOTAL_QUOTA - nextUsedCount
+    });
+  } catch (_error) {
+    res.status(500).json({ message: "增加额度失败" });
+  }
+});
+
 app.delete("/api/accounts/:account", requireAdmin, writeLimiter, async (req, res) => {
   try {
     const account = normalizeText(req.params.account);
