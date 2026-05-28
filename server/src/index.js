@@ -19,7 +19,7 @@ const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
 const DB_PATH = path.join(DATA_DIR, "model-platform.db");
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret-in-production";
 const ADMIN_INIT_PASSWORD = process.env.ADMIN_INIT_PASSWORD || "ChangeMe123!";
-const DESIGNER_TOTAL_QUOTA = 30;
+const DESIGNER_DEFAULT_TOTAL_QUOTA = 30;
 
 for (const dir of [DATA_DIR, UPLOAD_DIR]) {
   if (!fs.existsSync(dir)) {
@@ -79,6 +79,7 @@ async function initDb() {
       requirement TEXT NOT NULL,
       name TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT '待处理',
+      is_urgent INTEGER NOT NULL DEFAULT 0,
       material_code TEXT,
       tech_notes TEXT,
       producer TEXT,
@@ -88,30 +89,38 @@ async function initDb() {
       updated_at TEXT NOT NULL
     )
   `);
+  await run(`ALTER TABLE materials ADD COLUMN is_urgent INTEGER NOT NULL DEFAULT 0`).catch(() => {});
 
   await run(`
     CREATE TABLE IF NOT EXISTS accounts (
       account TEXT PRIMARY KEY,
       owner_name TEXT NOT NULL DEFAULT '',
       used_count INTEGER NOT NULL DEFAULT 0,
+      total_quota INTEGER NOT NULL DEFAULT 30,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )
   `);
 
   await run(`ALTER TABLE accounts ADD COLUMN owner_name TEXT NOT NULL DEFAULT ''`).catch(() => {});
+  await run(`ALTER TABLE accounts ADD COLUMN total_quota INTEGER NOT NULL DEFAULT 30`).catch(() => {});
   await run("UPDATE accounts SET owner_name = account, updated_at = ? WHERE owner_name = '' OR owner_name IS NULL", [
     now()
+  ]).catch(() => {});
+  await run("UPDATE accounts SET total_quota = ? WHERE total_quota IS NULL OR total_quota <= 0", [
+    DESIGNER_DEFAULT_TOTAL_QUOTA
   ]).catch(() => {});
 
   await run(`
     CREATE TABLE IF NOT EXISTS staff (
       account TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL,
+      password_plain TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )
   `);
+  await run(`ALTER TABLE staff ADD COLUMN password_plain TEXT NOT NULL DEFAULT ''`).catch(() => {});
 
   await run(`
     CREATE TABLE IF NOT EXISTS comments (
@@ -130,8 +139,8 @@ async function initDb() {
     const ts = now();
     const hash = await bcrypt.hash(ADMIN_INIT_PASSWORD, 10);
     await run(
-      "INSERT INTO staff(account, password_hash, created_at, updated_at) VALUES(?, ?, ?, ?)",
-      ["lyh666", hash, ts, ts]
+      "INSERT INTO staff(account, password_hash, password_plain, created_at, updated_at) VALUES(?, ?, ?, ?, ?)",
+      ["lyh666", hash, ADMIN_INIT_PASSWORD, ts, ts]
     );
     // eslint-disable-next-line no-console
     console.log("默认管理员已创建：lyh666，请尽快在数据库中更新初始化密码。");
@@ -141,7 +150,13 @@ async function initDb() {
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://192.168.0.214:5174",
+      "http://192.168.0.214:5175"
+    ],
     credentials: false
   })
 );
@@ -211,12 +226,13 @@ async function ensureDesignerIdentity(account, ownerName) {
 }
 
 async function getDesignerQuota(account) {
-  const row = await get("SELECT used_count FROM accounts WHERE account = ?", [account]);
+  const row = await get("SELECT used_count, total_quota FROM accounts WHERE account = ?", [account]);
   const used = row ? row.used_count : 0;
-  const remaining = Math.max(0, DESIGNER_TOTAL_QUOTA - used);
+  const total = row ? row.total_quota : DESIGNER_DEFAULT_TOTAL_QUOTA;
+  const remaining = Math.max(0, total - used);
   return {
     usedCount: used,
-    totalQuota: DESIGNER_TOTAL_QUOTA,
+    totalQuota: total,
     remaining
   };
 }
@@ -274,10 +290,10 @@ function publicMaterial(record) {
     requirement: record.requirement,
     name: record.name,
     status: record.status,
+    isUrgent: Number(record.is_urgent || 0) === 1,
     materialCode: record.material_code || "",
     techNotes: record.tech_notes || "",
     producer: record.producer || "",
-    completedAt: record.completed_at || "",
     rejectReason: record.reject_reason || "",
     createdAt: record.created_at,
     updatedAt: record.updated_at
@@ -375,7 +391,7 @@ app.post("/api/staff-login", loginLimiter, async (req, res) => {
 
 app.get("/api/staff", requireAdmin, async (_req, res) => {
   try {
-    const rows = await all("SELECT account, created_at, updated_at FROM staff ORDER BY created_at DESC");
+    const rows = await all("SELECT account, password_plain, created_at, updated_at FROM staff ORDER BY created_at DESC");
     res.json(rows);
   } catch (_error) {
     res.status(500).json({ message: "获取管理员失败" });
@@ -407,8 +423,8 @@ app.post("/api/staff", requireAdmin, writeLimiter, async (req, res) => {
       const ts = now();
       const hash = await bcrypt.hash(password, 10);
       await run(
-        "INSERT INTO staff(account, password_hash, created_at, updated_at) VALUES(?, ?, ?, ?)",
-        [account, hash, ts, ts]
+        "INSERT INTO staff(account, password_hash, password_plain, created_at, updated_at) VALUES(?, ?, ?, ?, ?)",
+        [account, hash, password, ts, ts]
       );
       added += 1;
     }
@@ -456,14 +472,45 @@ app.post("/api/staff/import-csv", requireAdmin, writeLimiter, csvUpload.single("
       const ts = now();
       const hash = await bcrypt.hash(password, 10);
       await run(
-        "INSERT INTO staff(account, password_hash, created_at, updated_at) VALUES(?, ?, ?, ?)",
-        [account, hash, ts, ts]
+        "INSERT INTO staff(account, password_hash, password_plain, created_at, updated_at) VALUES(?, ?, ?, ?, ?)",
+        [account, hash, password, ts, ts]
       );
       added += 1;
     }
     res.json({ added, skipped, failed });
   } catch (_error) {
     res.status(500).json({ message: "导入管理员 CSV 失败" });
+  }
+});
+
+app.put("/api/staff/:account/password", requireAdmin, writeLimiter, async (req, res) => {
+  try {
+    const account = normalizeText(req.params.account);
+    const password = typeof req.body?.password === "string" ? req.body.password.trim() : "";
+    if (!account) {
+      res.status(400).json({ message: "账号无效" });
+      return;
+    }
+    if (!password) {
+      res.status(400).json({ message: "请填写新密码" });
+      return;
+    }
+    const staff = await get("SELECT account FROM staff WHERE account = ?", [account]);
+    if (!staff) {
+      res.status(404).json({ message: "管理员账号不存在" });
+      return;
+    }
+    const ts = now();
+    const hash = await bcrypt.hash(password, 10);
+    await run("UPDATE staff SET password_hash = ?, password_plain = ?, updated_at = ? WHERE account = ?", [
+      hash,
+      password,
+      ts,
+      account
+    ]);
+    res.json({ success: true });
+  } catch (_error) {
+    res.status(500).json({ message: "修改管理员密码失败" });
   }
 });
 
@@ -484,7 +531,7 @@ app.delete("/api/staff/:account", requireAdmin, writeLimiter, async (req, res) =
 app.get("/api/accounts", requireAdmin, async (_req, res) => {
   try {
     const rows = await all(
-      "SELECT account, owner_name, used_count, created_at, updated_at FROM accounts ORDER BY created_at DESC"
+      "SELECT account, owner_name, used_count, total_quota, created_at, updated_at FROM accounts ORDER BY created_at DESC"
     );
     res.json(rows);
   } catch (_error) {
@@ -520,8 +567,8 @@ app.post("/api/accounts", requireAdmin, writeLimiter, async (req, res) => {
       }
       const ts = now();
       await run(
-        "INSERT INTO accounts(account, owner_name, used_count, created_at, updated_at) VALUES(?, ?, 0, ?, ?)",
-        [account, ownerName, ts, ts]
+        "INSERT INTO accounts(account, owner_name, used_count, total_quota, created_at, updated_at) VALUES(?, ?, 0, ?, ?, ?)",
+        [account, ownerName, DESIGNER_DEFAULT_TOTAL_QUOTA, ts, ts]
       );
       added += 1;
     }
@@ -559,8 +606,8 @@ app.post("/api/accounts/import-csv", requireAdmin, writeLimiter, csvUpload.singl
       }
       const ts = now();
       await run(
-        "INSERT INTO accounts(account, owner_name, used_count, created_at, updated_at) VALUES(?, ?, 0, ?, ?)",
-        [account, ownerName, ts, ts]
+        "INSERT INTO accounts(account, owner_name, used_count, total_quota, created_at, updated_at) VALUES(?, ?, 0, ?, ?, ?)",
+        [account, ownerName, DESIGNER_DEFAULT_TOTAL_QUOTA, ts, ts]
       );
       added += 1;
     }
@@ -588,26 +635,88 @@ app.put("/api/accounts/:account/quota/add", requireAdmin, writeLimiter, async (r
       res.status(400).json({ message: "账号无效" });
       return;
     }
-    const row = await get("SELECT account, used_count FROM accounts WHERE account = ?", [account]);
+    const row = await get("SELECT account, used_count, total_quota FROM accounts WHERE account = ?", [account]);
     if (!row) {
       res.status(404).json({ message: "设计师账号不存在" });
       return;
     }
     const ts = now();
-    const nextUsedCount = Math.max(0, row.used_count - amount);
-    await run("UPDATE accounts SET used_count = ?, updated_at = ? WHERE account = ?", [
-      nextUsedCount,
+    const nextTotalQuota = row.total_quota + amount;
+    await run("UPDATE accounts SET total_quota = ?, updated_at = ? WHERE account = ?", [
+      nextTotalQuota,
       ts,
       account
     ]);
     res.json({
       success: true,
       account,
-      usedCount: nextUsedCount,
-      remaining: DESIGNER_TOTAL_QUOTA - nextUsedCount
+      totalQuota: nextTotalQuota,
+      usedCount: row.used_count,
+      remaining: Math.max(0, nextTotalQuota - row.used_count)
     });
   } catch (_error) {
     res.status(500).json({ message: "增加额度失败" });
+  }
+});
+
+app.put("/api/accounts/:account/quota/set", requireAdmin, writeLimiter, async (req, res) => {
+  try {
+    const account = normalizeText(req.params.account);
+    const totalQuota = Number(req.body?.totalQuota);
+    if (!account) {
+      res.status(400).json({ message: "账号无效" });
+      return;
+    }
+    if (!Number.isFinite(totalQuota) || totalQuota < 0) {
+      res.status(400).json({ message: "请填写有效的初始额度" });
+      return;
+    }
+    const row = await get("SELECT account, used_count FROM accounts WHERE account = ?", [account]);
+    if (!row) {
+      res.status(404).json({ message: "设计师账号不存在" });
+      return;
+    }
+    const ts = now();
+    await run("UPDATE accounts SET total_quota = ?, updated_at = ? WHERE account = ?", [
+      Math.floor(totalQuota),
+      ts,
+      account
+    ]);
+    res.json({
+      success: true,
+      account,
+      totalQuota: Math.floor(totalQuota),
+      usedCount: row.used_count,
+      remaining: Math.max(0, Math.floor(totalQuota) - row.used_count)
+    });
+  } catch (_error) {
+    res.status(500).json({ message: "设置初始额度失败" });
+  }
+});
+
+app.put("/api/accounts/:account/quota/reset", requireAdmin, writeLimiter, async (req, res) => {
+  try {
+    const account = normalizeText(req.params.account);
+    if (!account) {
+      res.status(400).json({ message: "账号无效" });
+      return;
+    }
+    const row = await get("SELECT account, total_quota FROM accounts WHERE account = ?", [account]);
+    if (!row) {
+      res.status(404).json({ message: "设计师账号不存在" });
+      return;
+    }
+    const ts = now();
+    await run("UPDATE accounts SET used_count = 0, updated_at = ? WHERE account = ?", [ts, account]);
+    res.json({
+      success: true,
+      account,
+      totalQuota: row.total_quota,
+      usedCount: 0,
+      remaining: row.total_quota
+    });
+  } catch (_error) {
+    res.status(500).json({ message: "重置额度失败" });
   }
 });
 
@@ -720,7 +829,7 @@ app.post("/api/materials", writeLimiter, upload.single("image"), async (req, res
     }
 
     const quota = await getDesignerQuota(account);
-    if (quota.usedCount + consumeCount > DESIGNER_TOTAL_QUOTA) {
+    if (quota.usedCount + consumeCount > quota.totalQuota) {
       try {
         fs.unlinkSync(req.file.path);
       } catch (_e) {
@@ -739,13 +848,13 @@ app.post("/api/materials", writeLimiter, upload.single("image"), async (req, res
       await run(
         `
           INSERT INTO materials(
-            account, material_id, image_path, requirement, name, status,
+            account, material_id, image_path, requirement, name, status, is_urgent,
             material_code, tech_notes, producer, completed_at, reject_reason,
             created_at, updated_at
           )
-          VALUES(?, ?, ?, ?, ?, '待处理', '', '', '', '', '', ?, ?)
+          VALUES(?, ?, ?, ?, ?, '待处理', ?, '', '', '', '', '', ?, ?)
         `,
-        [account, materialId, relativeImagePath, requirement, name, ts, ts]
+        [account, materialId, relativeImagePath, requirement, name, isUrgent ? 1 : 0, ts, ts]
       );
       await run(
         "UPDATE accounts SET used_count = used_count + ?, updated_at = ? WHERE account = ?",
@@ -851,16 +960,15 @@ app.put("/api/materials/:id", requireAdmin, writeLimiter, async (req, res) => {
     }
     const ts = now();
     if (row.status === "制作中") {
-      const completedAt = row.completed_at || ts;
       await run(
         `
           UPDATE materials
-          SET status = '已完成', material_code = ?, tech_notes = ?, completed_at = ?, updated_at = ?
+          SET status = '已完成', material_code = ?, tech_notes = ?, updated_at = ?
           WHERE id = ?
         `,
-        [materialCode, techNotes, completedAt, ts, id]
+        [materialCode, techNotes, ts, id]
       );
-      res.json({ success: true, completedAt });
+      res.json({ success: true });
       return;
     }
     await run("UPDATE materials SET material_code = ?, tech_notes = ?, updated_at = ? WHERE id = ?", [
@@ -869,7 +977,7 @@ app.put("/api/materials/:id", requireAdmin, writeLimiter, async (req, res) => {
       ts,
       id
     ]);
-    res.json({ success: true, completedAt: row.completed_at });
+    res.json({ success: true });
   } catch (_error) {
     res.status(500).json({ message: "保存任务失败" });
   }

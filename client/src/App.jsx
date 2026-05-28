@@ -684,20 +684,20 @@ function DesignerView() {
             <thead>
               <tr>
                 <th>素材 ID</th>
+                <th>加急</th>
                 <th>名称</th>
                 <th>图片</th>
-                <th>状态</th>
+                <th className="status-cell">状态</th>
                 <th>素材库编码</th>
                 <th>备注</th>
                 <th>拒绝理由</th>
-                <th>完成时间</th>
                 <th>留言</th>
               </tr>
             </thead>
             <tbody>
               {tableRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="muted">暂无记录</td>
+                  <td colSpan={8} className="muted">暂无记录</td>
                 </tr>
               ) : null}
               {tableRows.map((item) => {
@@ -717,7 +717,7 @@ function DesignerView() {
                           onClick={() => setViewerSrc(imageSrc)}
                         />
                       </td>
-                      <td><StatusTag status={item.status} /></td>
+                      <td className="status-cell"><StatusTag status={item.status} /></td>
                       <td>
                         <span>{item.materialCode || "-"}</span>
                         {item.materialCode ? (
@@ -732,7 +732,6 @@ function DesignerView() {
                       </td>
                       <td>{item.techNotes || "-"}</td>
                       <td>{item.rejectReason || "-"}</td>
-                      <td>{item.completedAt ? new Date(item.completedAt).toLocaleString() : "-"}</td>
                       <td>
                         <button type="button" onClick={() => toggleComments(item.id)}>
                           {openedComments[item.id]
@@ -745,7 +744,7 @@ function DesignerView() {
                     </tr>
                     {openedComments[item.id] ? (
                       <tr key={`${item.id}-comments`}>
-                          <td colSpan={9}>
+                          <td colSpan={8}>
                           <CommentsPanel
                             material={item}
                             comments={commentsMap[item.id] || []}
@@ -846,6 +845,8 @@ function AdminView() {
   const [selectedAccounts, setSelectedAccounts] = useState({});
   const [selectedStaffs, setSelectedStaffs] = useState({});
   const [quotaAddMap, setQuotaAddMap] = useState({});
+  const [quotaSetMap, setQuotaSetMap] = useState({});
+  const [staffPasswordMap, setStaffPasswordMap] = useState({});
   const [rejectDialog, setRejectDialog] = useState({ open: false, id: 0, reason: "", saving: false });
   const [adminTab, setAdminTab] = useState("materials");
 
@@ -1089,6 +1090,37 @@ function AdminView() {
     }
   }
 
+  async function setAccountQuota(account) {
+    const totalQuota = Number(quotaSetMap[account]);
+    if (!Number.isFinite(totalQuota) || totalQuota < 0) {
+      setMessage("请输入有效的初始额度");
+      return;
+    }
+    try {
+      await api(`/api/accounts/${encodeURIComponent(account)}/quota/set`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ totalQuota })
+      });
+      setMessage(`已把 ${account} 的初始额度设置为 ${totalQuota}`);
+      setQuotaSetMap((prev) => ({ ...prev, [account]: "" }));
+      await loadAll();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function resetAccountQuota(account) {
+    if (!window.confirm(`确认重置 ${account} 的已用额度吗？`)) return;
+    try {
+      await api(`/api/accounts/${encodeURIComponent(account)}/quota/reset`, { method: "PUT" });
+      setMessage(`已重置 ${account} 的额度`);
+      await loadAll();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
   async function removeAccountsBatch() {
     const list = Object.keys(selectedAccounts).filter((k) => selectedAccounts[k]);
     if (list.length === 0) {
@@ -1131,6 +1163,26 @@ function AdminView() {
     if (!window.confirm(`确认删除管理员 ${account} 吗？`)) return;
     try {
       await api(`/api/staff/${encodeURIComponent(account)}`, { method: "DELETE" });
+      await loadAll();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function updateStaffPassword(account) {
+    const password = (staffPasswordMap[account] || "").trim();
+    if (!password) {
+      setMessage("请填写新密码");
+      return;
+    }
+    try {
+      await api(`/api/staff/${encodeURIComponent(account)}/password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      setStaffPasswordMap((prev) => ({ ...prev, [account]: "" }));
+      setMessage(`已修改管理员 ${account} 的密码`);
       await loadAll();
     } catch (error) {
       setMessage(error.message);
@@ -1334,16 +1386,15 @@ function AdminView() {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>设计师</th>
                 <th>素材 ID</th>
                 <th>名称</th>
+                <th>加急</th>
                 <th>图片</th>
                 <th>状态</th>
                 <th>编码</th>
                 <th>备注</th>
                 <th>制作人</th>
-                <th>完成时间</th>
                 <th>拒绝理由</th>
                 <th>操作</th>
               </tr>
@@ -1351,7 +1402,7 @@ function AdminView() {
             <tbody>
               {materials.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="muted">暂无数据</td>
+                  <td colSpan={11} className="muted">暂无数据</td>
                 </tr>
               ) : null}
               {materials.map((item) => {
@@ -1360,10 +1411,10 @@ function AdminView() {
                 return (
                   <>
                     <tr key={item.id}>
-                      <td>{item.id}</td>
                       <td>{item.account}</td>
                       <td>{item.materialId}</td>
                       <td>{item.name}</td>
+                      <td>{item.isUrgent ? <span className="urgent-admin-tag">加急登记</span> : "-"}</td>
                       <td>
                         <img
                           className="thumb"
@@ -1402,10 +1453,9 @@ function AdminView() {
                           />
                         ) : (
                           item.techNotes || "-"
-                        )}
-                      </td>
-                      <td>{item.producer || "-"}</td>
-                      <td>{item.completedAt ? new Date(item.completedAt).toLocaleString() : "-"}</td>
+                      )}
+                    </td>
+                    <td>{item.producer || "-"}</td>
                       <td>{item.rejectReason || "-"}</td>
                       <td>
                         <div className="actions">
@@ -1439,7 +1489,7 @@ function AdminView() {
                     </tr>
                     {openedComments[item.id] ? (
                       <tr key={`${item.id}-comments`}>
-                        <td colSpan={12}>
+                        <td colSpan={11}>
                           <CommentsPanel
                             material={item}
                             comments={commentsMap[item.id] || []}
@@ -1498,7 +1548,9 @@ function AdminView() {
                   <th>选择</th>
                   <th>账号</th>
                   <th>姓名</th>
+                  <th>总额度</th>
                   <th>已用次数</th>
+                  <th>剩余额度</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -1516,12 +1568,13 @@ function AdminView() {
                     </td>
                     <td>{item.account}</td>
                     <td>{item.owner_name || "-"}</td>
+                    <td>{item.total_quota}</td>
                     <td>{item.used_count}</td>
+                    <td>{Math.max(0, item.total_quota - item.used_count)}</td>
                     <td>
                       <input
                         type="number"
                         min="1"
-                        max={item.used_count || 1}
                         value={quotaAddMap[item.account] || ""}
                         onChange={(e) =>
                           setQuotaAddMap((prev) => ({ ...prev, [item.account]: e.target.value }))
@@ -1530,6 +1583,18 @@ function AdminView() {
                         className="quota-add-input"
                       />
                       <button type="button" onClick={() => addAccountQuota(item.account)}>增加额度</button>
+                      <input
+                        type="number"
+                        min="0"
+                        value={quotaSetMap[item.account] || ""}
+                        onChange={(e) =>
+                          setQuotaSetMap((prev) => ({ ...prev, [item.account]: e.target.value }))
+                        }
+                        placeholder="总额度"
+                        className="quota-add-input"
+                      />
+                      <button type="button" onClick={() => setAccountQuota(item.account)}>设置初始额度</button>
+                      <button type="button" onClick={() => resetAccountQuota(item.account)}>重置额度</button>
                       <button type="button" onClick={() => removeAccount(item.account)}>删除</button>
                     </td>
                   </tr>
@@ -1567,6 +1632,8 @@ function AdminView() {
                 <tr>
                   <th>选择</th>
                   <th>账号</th>
+                  <th>当前密码</th>
+                  <th>修改密码</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -1583,6 +1650,19 @@ function AdminView() {
                       />
                     </td>
                     <td>{item.account}</td>
+                    <td>{item.password_plain || "已加密，需重置"}</td>
+                    <td>
+                      <input
+                        type="text"
+                        value={staffPasswordMap[item.account] || ""}
+                        onChange={(e) =>
+                          setStaffPasswordMap((prev) => ({ ...prev, [item.account]: e.target.value }))
+                        }
+                        placeholder="输入新密码"
+                        className="staff-password-input"
+                      />
+                      <button type="button" onClick={() => updateStaffPassword(item.account)}>保存密码</button>
+                    </td>
                     <td>
                       <button type="button" onClick={() => removeStaff(item.account)}>删除</button>
                     </td>

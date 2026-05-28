@@ -181,7 +181,7 @@ button:disabled {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 1120px;
 }
 
 .table-wrap.small table {
@@ -214,9 +214,22 @@ th {
 
 .status-tag {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 12px;
+  min-width: 64px;
+  white-space: nowrap !important;
+  word-break: keep-all;
+  flex-shrink: 0;
+}
+
+.status-cell {
+  width: 92px;
+  min-width: 92px;
+  white-space: nowrap !important;
+  word-break: keep-all;
 }
 
 .tag-pending {
@@ -498,6 +511,11 @@ th {
   margin-right: 6px;
 }
 
+.staff-password-input {
+  width: 150px;
+  margin-right: 6px;
+}
+
 .submit-actions {
   display: flex;
   align-items: center;
@@ -538,6 +556,20 @@ th {
   padding: 6px 10px;
   font-size: 13px;
   cursor: not-allowed;
+}
+
+.urgent-admin-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dc2626;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
