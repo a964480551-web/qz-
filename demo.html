@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>模型登记与协作平台 Demo</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;max-width:736px;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Project Demo" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Project Demo&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(--background) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: light-dark(rgb(255 255 255), rgb(24 24 24));
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 12.5px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--viz-font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;qz-project-demo&quot;&gt;
+  &lt;style&gt;
+    #qz-project-demo {
+      --demo-bg: var(--background, #f6f7f9);
+      --demo-fg: var(--foreground, #17202a);
+      --demo-card: var(--card, #ffffff);
+      --demo-card-fg: var(--card-foreground, #17202a);
+      --demo-muted: var(--muted, #eef1f4);
+      --demo-muted-fg: var(--muted-foreground, #65717e);
+      --demo-primary: var(--primary, #243447);
+      --demo-primary-fg: var(--primary-foreground, #ffffff);
+      --demo-accent: var(--accent, #e9eef4);
+      --demo-border: var(--border, #dce1e7);
+      --demo-series-1: var(--viz-series-1, #3d7bfd);
+      --demo-series-2: var(--viz-series-2, #35a56f);
+      --demo-series-3: var(--viz-series-3, #db8b2d);
+      color: var(--demo-fg);
+      background: var(--demo-bg);
+      border: 1px solid var(--demo-border);
+      border-radius: 18px;
+      overflow: hidden;
+      font-family: Inter, &quot;Microsoft YaHei&quot;, system-ui, sans-serif;
+    }
+    #qz-project-demo * { box-sizing: border-box; }
+    #qz-project-demo .demo-shell { display: grid; grid-template-columns: 180px minmax(0, 1fr); min-height: 650px; }
+    #qz-project-demo .demo-nav { padding: 22px 16px; background: var(--demo-primary); color: var(--demo-primary-fg); }
+    #qz-project-demo .demo-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 34px; font-weight: 500; }
+    #qz-project-demo .demo-brand svg { width: 34px; height: 34px; }
+    #qz-project-demo .demo-nav-item { display: flex; align-items: center; gap: 9px; padding: 10px 11px; margin: 5px 0; border-radius: 9px; color: inherit; opacity: .72; }
+    #qz-project-demo .demo-nav-item.is-active { background: color-mix(in srgb, var(--demo-primary-fg) 14%, transparent); opacity: 1; }
+    #qz-project-demo .demo-nav-item svg { width: 17px; height: 17px; }
+    #qz-project-demo .demo-main { min-width: 0; padding: 22px; }
+    #qz-project-demo .demo-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+    #qz-project-demo .demo-title { font-size: 20px; font-weight: 500; }
+    #qz-project-demo .demo-subtitle { color: var(--demo-muted-fg); margin-top: 4px; font-size: 13px; }
+    #qz-project-demo .demo-switch { display: flex; gap: 6px; padding: 4px; background: var(--demo-muted); border-radius: 10px; }
+    #qz-project-demo .demo-switch button { border: 0; border-radius: 7px; padding: 7px 12px; background: transparent; color: var(--demo-muted-fg); cursor: pointer; }
+    #qz-project-demo .demo-switch button[aria-pressed=&quot;true&quot;] { background: var(--demo-card); color: var(--demo-card-fg); box-shadow: 0 1px 4px color-mix(in srgb, var(--demo-fg) 12%, transparent); }
+    #qz-project-demo .demo-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    #qz-project-demo .demo-stat { background: var(--demo-card); border: 1px solid var(--demo-border); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+    #qz-project-demo .demo-stat svg { width: 42px; height: 42px; flex: 0 0 auto; }
+    #qz-project-demo .demo-stat-label { color: var(--demo-muted-fg); font-size: 12px; }
+    #qz-project-demo .demo-stat-value { font-size: 22px; font-weight: 500; margin-top: 2px; }
+    #qz-project-demo .demo-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(240px, .65fr); gap: 14px; }
+    #qz-project-demo .demo-panel { background: var(--demo-card); border: 1px solid var(--demo-border); border-radius: 12px; padding: 15px; min-width: 0; }
+    #qz-project-demo .demo-panel-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 12px; }
+    #qz-project-demo .demo-panel-title { font-weight: 500; }
+    #qz-project-demo .demo-badge { color: var(--demo-muted-fg); background: var(--demo-muted); border-radius: 999px; padding: 4px 8px; font-size: 11px; }
+    #qz-project-demo .workflow { width: 100%; height: auto; display: block; }
+    #qz-project-demo .flow-line { stroke: var(--demo-border); stroke-width: 4; stroke-linecap: round; }
+    #qz-project-demo .flow-node { fill: var(--demo-muted); stroke: var(--demo-border); stroke-width: 1.5; }
+    #qz-project-demo .flow-node.is-current { fill: color-mix(in srgb, var(--demo-series-1) 18%, var(--demo-card)); stroke: var(--demo-series-1); }
+    #qz-project-demo .flow-node.is-done { fill: color-mix(in srgb, var(--demo-series-2) 18%, var(--demo-card)); stroke: var(--demo-series-2); }
+    #qz-project-demo .flow-label { fill: var(--demo-card-fg); font-size: 12px; font-family: inherit; text-anchor: middle; }
+    #qz-project-demo .flow-caption { fill: var(--demo-muted-fg); font-size: 10px; font-family: inherit; text-anchor: middle; }
+    #qz-project-demo .queue-list { display: grid; gap: 9px; }
+    #qz-project-demo .queue-item { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding-bottom: 9px; border-bottom: 1px solid var(--demo-border); }
+    #qz-project-demo .queue-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    #qz-project-demo .queue-thumb { width: 36px; height: 36px; }
+    #qz-project-demo .queue-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #qz-project-demo .queue-meta { font-size: 11px; color: var(--demo-muted-fg); margin-top: 2px; }
+    #qz-project-demo .queue-status { font-size: 11px; padding: 4px 7px; border-radius: 999px; background: color-mix(in srgb, var(--demo-series-3) 15%, var(--demo-card)); color: var(--demo-card-fg); }
+    #qz-project-demo .security-row { margin-top: 14px; display: flex; align-items: center; gap: 9px; color: var(--demo-muted-fg); font-size: 12px; }
+    #qz-project-demo .security-row svg { width: 18px; height: 18px; color: var(--demo-series-2); }
+    @media (max-width: 700px) {
+      #qz-project-demo .demo-shell { grid-template-columns: 1fr; }
+      #qz-project-demo .demo-nav { padding: 14px 16px; }
+      #qz-project-demo .demo-brand { margin-bottom: 10px; }
+      #qz-project-demo .demo-nav-items { display: flex; gap: 5px; overflow: hidden; }
+      #qz-project-demo .demo-nav-item { margin: 0; padding: 7px 9px; font-size: 12px; }
+      #qz-project-demo .demo-main { padding: 16px; }
+      #qz-project-demo .demo-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 460px) {
+      #qz-project-demo .demo-stats { grid-template-columns: 1fr; }
+      #qz-project-demo .demo-nav-item:nth-child(n+3) { display: none; }
+    }
+  &lt;/style&gt;
+  &lt;div class=&quot;demo-shell&quot;&gt;
+    &lt;aside class=&quot;demo-nav&quot; aria-label=&quot;项目演示导航&quot;&gt;
+      &lt;div class=&quot;demo-brand&quot;&gt;
+        &lt;svg viewBox=&quot;0 0 40 40&quot; role=&quot;img&quot; aria-label=&quot;模型平台标志&quot;&gt;
+          &lt;rect x=&quot;3&quot; y=&quot;3&quot; width=&quot;34&quot; height=&quot;34&quot; rx=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;/&gt;
+          &lt;path d=&quot;M12 14h16M12 20h10M12 26h16&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.3&quot; stroke-linecap=&quot;round&quot;/&gt;
+          &lt;circle cx=&quot;28&quot; cy=&quot;20&quot; r=&quot;3&quot; fill=&quot;currentColor&quot;/&gt;
+        &lt;/svg&gt;
+        &lt;span&gt;模型协作台&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;demo-nav-items&quot;&gt;
+        &lt;div class=&quot;demo-nav-item is-active&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;/svg&gt;
+          &lt;span&gt;工作台&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;demo-nav-item&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 4h14v16H5zM8 8h8M8 12h8M8 16h5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;
+          &lt;span&gt;模型登记&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;demo-nav-item&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;8&quot; r=&quot;4&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M5 21c.7-4 3-6 7-6s6.3 2 7 6&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;
+          &lt;span&gt;账号管理&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/aside&gt;
+    &lt;main class=&quot;demo-main&quot;&gt;
+      &lt;div class=&quot;demo-top&quot;&gt;
+        &lt;div&gt;
+          &lt;div class=&quot;demo-title&quot; id=&quot;demo-view-title&quot;&gt;今日登记概览&lt;/div&gt;
+          &lt;div class=&quot;demo-subtitle&quot; id=&quot;demo-view-subtitle&quot;&gt;虚构数据 · 静态交互演示&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;demo-switch&quot; role=&quot;group&quot; aria-label=&quot;切换演示视角&quot;&gt;
+          &lt;button type=&quot;button&quot; data-view=&quot;designer&quot; aria-pressed=&quot;true&quot;&gt;登记端&lt;/button&gt;
+          &lt;button type=&quot;button&quot; data-view=&quot;admin&quot; aria-pressed=&quot;false&quot;&gt;管理端&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;section class=&quot;demo-stats&quot; aria-label=&quot;关键数据&quot;&gt;
+        &lt;div class=&quot;demo-stat&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 44 44&quot; role=&quot;img&quot; aria-label=&quot;登记数量&quot;&gt;
+            &lt;circle cx=&quot;22&quot; cy=&quot;22&quot; r=&quot;18&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-muted)&quot; stroke-width=&quot;5&quot;/&gt;
+            &lt;path d=&quot;M22 4a18 18 0 0 1 17 12&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-1)&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M17 22h10M22 17v10&quot; stroke=&quot;var(--demo-card-fg)&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;
+          &lt;/svg&gt;
+          &lt;div&gt;&lt;div class=&quot;demo-stat-label&quot; id=&quot;stat-a-label&quot;&gt;今日登记&lt;/div&gt;&lt;div class=&quot;demo-stat-value&quot; id=&quot;stat-a&quot;&gt;8&lt;/div&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;demo-stat&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 44 44&quot; role=&quot;img&quot; aria-label=&quot;制作进度&quot;&gt;
+            &lt;circle cx=&quot;22&quot; cy=&quot;22&quot; r=&quot;18&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-muted)&quot; stroke-width=&quot;5&quot;/&gt;
+            &lt;path d=&quot;M22 4a18 18 0 1 1-17 24&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-2)&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;m15 22 5 5 10-11&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-card-fg)&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
+          &lt;/svg&gt;
+          &lt;div&gt;&lt;div class=&quot;demo-stat-label&quot; id=&quot;stat-b-label&quot;&gt;本月完成&lt;/div&gt;&lt;div class=&quot;demo-stat-value&quot; id=&quot;stat-b&quot;&gt;26&lt;/div&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;demo-stat&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 44 44&quot; role=&quot;img&quot; aria-label=&quot;剩余额度&quot;&gt;
+            &lt;rect x=&quot;7&quot; y=&quot;10&quot; width=&quot;30&quot; height=&quot;24&quot; rx=&quot;6&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-3)&quot; stroke-width=&quot;3&quot;/&gt;
+            &lt;path d=&quot;M13 18h18M13 25h11&quot; stroke=&quot;var(--demo-card-fg)&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;
+          &lt;/svg&gt;
+          &lt;div&gt;&lt;div class=&quot;demo-stat-label&quot; id=&quot;stat-c-label&quot;&gt;剩余额度&lt;/div&gt;&lt;div class=&quot;demo-stat-value&quot; id=&quot;stat-c&quot;&gt;18&lt;/div&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+      &lt;div class=&quot;demo-grid&quot;&gt;
+        &lt;section class=&quot;demo-panel&quot; aria-labelledby=&quot;flow-title&quot;&gt;
+          &lt;div class=&quot;demo-panel-head&quot;&gt;&lt;span class=&quot;demo-panel-title&quot; id=&quot;flow-title&quot;&gt;任务流转&lt;/span&gt;&lt;span class=&quot;demo-badge&quot; id=&quot;flow-badge&quot;&gt;当前：制作中&lt;/span&gt;&lt;/div&gt;
+          &lt;svg class=&quot;workflow&quot; viewBox=&quot;0 0 620 220&quot; role=&quot;img&quot; aria-labelledby=&quot;workflow-svg-title workflow-svg-desc&quot;&gt;
+            &lt;title id=&quot;workflow-svg-title&quot;&gt;模型登记处理流程&lt;/title&gt;
+            &lt;desc id=&quot;workflow-svg-desc&quot;&gt;从提交需求、队列审核、模型制作到交付完成的四步流程。&lt;/desc&gt;
+            &lt;line class=&quot;flow-line&quot; x1=&quot;105&quot; y1=&quot;92&quot; x2=&quot;515&quot; y2=&quot;92&quot;/&gt;
+            &lt;g transform=&quot;translate(105 92)&quot;&gt;&lt;circle class=&quot;flow-node is-done&quot; r=&quot;34&quot;/&gt;&lt;path d=&quot;m-12 0 8 8 17-19&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-2)&quot; stroke-width=&quot;4&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;text class=&quot;flow-label&quot; y=&quot;59&quot;&gt;提交需求&lt;/text&gt;&lt;text class=&quot;flow-caption&quot; y=&quot;76&quot;&gt;图片与说明&lt;/text&gt;&lt;/g&gt;
+            &lt;g transform=&quot;translate(242 92)&quot;&gt;&lt;circle class=&quot;flow-node is-done&quot; r=&quot;34&quot;/&gt;&lt;path d=&quot;M-13-10h26v20h-26zM-7-4h14M-7 3h9&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-2)&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;text class=&quot;flow-label&quot; y=&quot;59&quot;&gt;队列审核&lt;/text&gt;&lt;text class=&quot;flow-caption&quot; y=&quot;76&quot;&gt;需求确认&lt;/text&gt;&lt;/g&gt;
+            &lt;g transform=&quot;translate(378 92)&quot;&gt;&lt;circle class=&quot;flow-node is-current&quot; r=&quot;34&quot;/&gt;&lt;path d=&quot;M-15 9 0-15 15 9ZM-6 9l6-9 6 9&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-1)&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;text class=&quot;flow-label&quot; y=&quot;59&quot;&gt;模型制作&lt;/text&gt;&lt;text class=&quot;flow-caption&quot; y=&quot;76&quot;&gt;当前阶段&lt;/text&gt;&lt;/g&gt;
+            &lt;g transform=&quot;translate(515 92)&quot;&gt;&lt;circle class=&quot;flow-node&quot; r=&quot;34&quot;/&gt;&lt;path d=&quot;M-14-9h28v18h-28zM-7 14h14&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-muted-fg)&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;text class=&quot;flow-label&quot; y=&quot;59&quot;&gt;交付完成&lt;/text&gt;&lt;text class=&quot;flow-caption&quot; y=&quot;76&quot;&gt;下载与归档&lt;/text&gt;&lt;/g&gt;
+          &lt;/svg&gt;
+          &lt;div class=&quot;security-row&quot;&gt;
+            &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 3 5 6v5c0 4.8 2.7 8.1 7 10 4.3-1.9 7-5.2 7-10V6l-7-3Z&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;m9 12 2 2 4-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;
+            &lt;span&gt;演示数据完全虚构，不连接生产接口，也不包含真实凭据。&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+        &lt;section class=&quot;demo-panel&quot; aria-labelledby=&quot;queue-title&quot;&gt;
+          &lt;div class=&quot;demo-panel-head&quot;&gt;&lt;span class=&quot;demo-panel-title&quot; id=&quot;queue-title&quot;&gt;处理队列&lt;/span&gt;&lt;span class=&quot;demo-badge&quot;&gt;4 项&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;queue-list&quot; id=&quot;queue-list&quot;&gt;
+            &lt;div class=&quot;queue-item&quot;&gt;&lt;svg class=&quot;queue-thumb&quot; viewBox=&quot;0 0 36 36&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect width=&quot;36&quot; height=&quot;36&quot; rx=&quot;9&quot; fill=&quot;var(--demo-muted)&quot;/&gt;&lt;path d=&quot;M7 26 14 14l5 7 4-5 6 10Z&quot; fill=&quot;var(--demo-series-1)&quot; opacity=&quot;.55&quot;/&gt;&lt;circle cx=&quot;25&quot; cy=&quot;11&quot; r=&quot;3&quot; fill=&quot;var(--demo-series-3)&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;div class=&quot;queue-name&quot;&gt;场景模型优化&lt;/div&gt;&lt;div class=&quot;queue-meta&quot;&gt;编号 DEMO-1042&lt;/div&gt;&lt;/div&gt;&lt;span class=&quot;queue-status&quot;&gt;制作中&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;queue-item&quot;&gt;&lt;svg class=&quot;queue-thumb&quot; viewBox=&quot;0 0 36 36&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect width=&quot;36&quot; height=&quot;36&quot; rx=&quot;9&quot; fill=&quot;var(--demo-muted)&quot;/&gt;&lt;circle cx=&quot;18&quot; cy=&quot;17&quot; r=&quot;9&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-2)&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M10 27h16&quot; stroke=&quot;var(--demo-series-2)&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;div class=&quot;queue-name&quot;&gt;角色拓扑整理&lt;/div&gt;&lt;div class=&quot;queue-meta&quot;&gt;编号 DEMO-1041&lt;/div&gt;&lt;/div&gt;&lt;span class=&quot;queue-status&quot;&gt;待处理&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;queue-item&quot;&gt;&lt;svg class=&quot;queue-thumb&quot; viewBox=&quot;0 0 36 36&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect width=&quot;36&quot; height=&quot;36&quot; rx=&quot;9&quot; fill=&quot;var(--demo-muted)&quot;/&gt;&lt;path d=&quot;m8 24 10-15 10 15Z&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-3)&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;18&quot; cy=&quot;21&quot; r=&quot;3&quot; fill=&quot;var(--demo-series-3)&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;div class=&quot;queue-name&quot;&gt;产品外观建模&lt;/div&gt;&lt;div class=&quot;queue-meta&quot;&gt;编号 DEMO-1039&lt;/div&gt;&lt;/div&gt;&lt;span class=&quot;queue-status&quot;&gt;审核中&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;queue-item&quot;&gt;&lt;svg class=&quot;queue-thumb&quot; viewBox=&quot;0 0 36 36&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect width=&quot;36&quot; height=&quot;36&quot; rx=&quot;9&quot; fill=&quot;var(--demo-muted)&quot;/&gt;&lt;path d=&quot;M9 10h18v16H9zM13 14h10M13 19h7&quot; fill=&quot;none&quot; stroke=&quot;var(--demo-series-1)&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;div class=&quot;queue-name&quot;&gt;材质规范检查&lt;/div&gt;&lt;div class=&quot;queue-meta&quot;&gt;编号 DEMO-1038&lt;/div&gt;&lt;/div&gt;&lt;span class=&quot;queue-status&quot;&gt;已完成&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+      &lt;/div&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+  &lt;script&gt;
+    (() =&gt; {
+      const root = document.getElementById(&quot;qz-project-demo&quot;);
+      const views = {
+        designer: {
+          title: &quot;今日登记概览&quot;, subtitle: &quot;虚构数据 · 静态交互演示&quot;,
+          stats: [[&quot;今日登记&quot;, &quot;8&quot;], [&quot;本月完成&quot;, &quot;26&quot;], [&quot;剩余额度&quot;, &quot;18&quot;]], badge: &quot;当前：制作中&quot;
+        },
+        admin: {
+          title: &quot;管理端处理概览&quot;, subtitle: &quot;演示管理员队列与任务流转&quot;,
+          stats: [[&quot;待处理&quot;, &quot;12&quot;], [&quot;制作中&quot;, &quot;7&quot;], [&quot;今日完成&quot;, &quot;15&quot;]], badge: &quot;队列：运行正常&quot;
+        }
+      };
+      const buttons = [...root.querySelectorAll(&quot;[data-view]&quot;)];
+      const labels = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;];
+      function setView(name) {
+        const view = views[name];
+        root.querySelector(&quot;#demo-view-title&quot;).textContent = view.title;
+        root.querySelector(&quot;#demo-view-subtitle&quot;).textContent = view.subtitle;
+        labels.forEach((key, index) =&gt; {
+          root.querySelector(`#stat-${key}-label`).textContent = view.stats[index][0];
+          root.querySelector(`#stat-${key}`).textContent = view.stats[index][1];
+        });
+        root.querySelector(&quot;#flow-badge&quot;).textContent = view.badge;
+        buttons.forEach((button) =&gt; button.setAttribute(&quot;aria-pressed&quot;, String(button.dataset.view === name)));
+      }
+      buttons.forEach((button) =&gt; button.addEventListener(&quot;click&quot;, () =&gt; setView(button.dataset.view)));
+    })();
+  &lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

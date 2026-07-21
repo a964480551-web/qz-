@@ -1,0 +1,41 @@
+# Node dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+dist/
+client/dist/
+
+# Runtime data
+server/data/
+server/uploads/
+.trash/
+
+# Env files
+.env
+.env.local
+.env.*.local
+client/.env
+client/.env.local
+server/.env
+server/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local archives and deployment bundles
+*.zip
+纯覆盖服务器文件*/
+替换说明_*.txt
+审查说明_*.txt
