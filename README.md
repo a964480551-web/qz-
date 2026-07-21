@@ -1,4 +1,4 @@
-# 模型登记与协作平台
+<img width="1113" height="999" alt="image" src="https://github.com/user-attachments/assets/a62a9c7c-5758-42c7-ae54-ea2fb4711f34" /># 模型登记与协作平台
 
 一个前后端分离的模型登记与协作系统，包含设计师登记、图片上传、留言沟通、状态流转、额度管理和管理员后台。
 
